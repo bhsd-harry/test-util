@@ -1,7 +1,7 @@
 import fs from 'fs';
 import assert from 'assert';
 import {performance as perf} from 'perf_hooks';
-import {refreshStdout} from '@bhsd/common';
+import {refreshStdout} from '@bhsd/nodejs';
 
 declare interface MediaWikiPage {
 	readonly pageid: number;
