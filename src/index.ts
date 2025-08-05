@@ -1,8 +1,10 @@
 import fs from 'fs';
+import {execSync} from 'child_process';
 import assert from 'assert';
 import {performance as perf} from 'perf_hooks';
 import {refreshStdout} from '@bhsd/nodejs';
 
+declare const $VERSION: string;
 declare interface MediaWikiPage {
 	readonly pageid: number;
 	readonly title: string;
@@ -60,7 +62,13 @@ export const getPages = async (url: string, site?: string, grclimit = 'max'): Pr
 			rvprop: 'contentmodel|content',
 			...c,
 		},
-		response: MediaWikiResponse = await (await fetch(`${url}?${String(new URLSearchParams(qs))}`)).json();
+		response: MediaWikiResponse = await (await fetch(`${url}?${String(new URLSearchParams(qs))}`, {
+			headers: {
+				'User-Agent': `@bhsd/test-util/${$VERSION} (https://www.npmjs.com/package/@bhsd/test-util; ${
+					execSync('git config user.email', {encoding: 'utf8'}).trim()
+				}) Node.js/${process.version}`,
+			},
+		})).json();
 	c = response.continue; // eslint-disable-line require-atomic-updates
 	return response.query.pages.map(({pageid, title, ns, revisions}) => ({
 		pageid,

@@ -6,6 +6,7 @@
 		"target": "ES2024",
 		"module": "NodeNext",
 		"declaration": true,
+		"emitDeclarationOnly": true,
 		"outDir": "dist",
 		"alwaysStrict": true,
 		"exactOptionalPropertyTypes": true,
