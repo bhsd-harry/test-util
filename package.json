@@ -38,7 +38,7 @@
 		"eslint-plugin-regexp": "^2.9.0",
 		"eslint-plugin-unicorn": "^56.0.1",
 		"typescript": "^5.8.2",
-		"wikiparser-node": "^1.23.0"
+		"wikiparser-node": "^1.24.1"
 	},
 	"engines": {
 		"node": ">=18.17.0"
