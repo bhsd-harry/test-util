@@ -14,12 +14,3 @@ esbuild.buildSync({
 	outfile: 'dist/index.js',
 	logLevel: 'info',
 });
-
-esbuild.buildSync({
-	entryPoints: ['src/reporter.ts', 'src/import.ts'],
-	charset: 'utf8',
-	target: 'es2023',
-	format: 'cjs',
-	outdir: '.',
-	logLevel: 'info',
-});

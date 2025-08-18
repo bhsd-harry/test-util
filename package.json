@@ -1,6 +1,6 @@
 {
 	"name": "@bhsd/test-util",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"homepage": "https://github.com/bhsd-harry/test-util#readme",
 	"bugs": {
 		"url": "https://github.com/bhsd-harry/test-util/issues"
@@ -8,8 +8,7 @@
 	"license": "MIT",
 	"author": "Bhsd",
 	"files": [
-		"/dist/index.*",
-		"reporter.js"
+		"/dist/"
 	],
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -23,23 +22,23 @@
 		"@bhsd/nodejs": "^0.0.1"
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^1.0.1",
+		"@bhsd/code-standard": "^1.2.0",
 		"@stylistic/eslint-plugin": "^3.1.0",
 		"@types/mocha": "^10.0.10",
 		"@types/node": "^24.0.10",
 		"@typescript-eslint/eslint-plugin": "^8.35.1",
 		"@typescript-eslint/parser": "^8.35.1",
-		"esbuild": "^0.25.5",
+		"esbuild": "^0.25.10",
 		"eslint": "^8.57.1",
 		"eslint-plugin-eslint-comments": "^3.2.0",
-		"eslint-plugin-jsdoc": "^52.0.2",
+		"eslint-plugin-jsdoc": "^54.1.1",
 		"eslint-plugin-json-es": "^1.6.0",
 		"eslint-plugin-n": "^17.20.0",
 		"eslint-plugin-promise": "^7.2.1",
 		"eslint-plugin-regexp": "^2.9.0",
 		"eslint-plugin-unicorn": "^56.0.1",
 		"typescript": "^5.8.2",
-		"wikiparser-node": "^1.24.1"
+		"wikiparser-node": "^1.28.1"
 	},
 	"engines": {
 		"node": ">=18.17.0"

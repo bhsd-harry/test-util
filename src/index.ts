@@ -25,6 +25,7 @@ export interface SimplePage extends Pick<MediaWikiPage, 'pageid' | 'title' | 'ns
 }
 export interface Test {
 	desc: string;
+	title?: string | undefined;
 	wikitext?: string;
 	parsed?: string;
 	html?: string;
