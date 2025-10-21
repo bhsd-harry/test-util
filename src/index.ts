@@ -154,6 +154,7 @@ export const mochaTest = (
 						delete test.html;
 						delete test.print;
 						delete test.render;
+						delete test.title;
 						test.parsed = parse(wikitext);
 						assert.deepStrictEqual(
 							split(test),
