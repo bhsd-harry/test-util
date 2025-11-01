@@ -22,7 +22,7 @@
 		"@bhsd/nodejs": "^0.0.1"
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^1.2.0",
+		"@bhsd/code-standard": "^1.3.0",
 		"@stylistic/eslint-plugin": "^3.1.0",
 		"@types/mocha": "^10.0.10",
 		"@types/node": "^24.9.2",
