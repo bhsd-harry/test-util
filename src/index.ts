@@ -34,7 +34,7 @@ export interface Test {
 }
 declare type TestResult = Pick<Test, 'desc' | 'wikitext' | 'parsed'>;
 
-const apis = [
+export const apis = [
 	['维基百科', 'https://zh.wikipedia.org/w'],
 	['Wikipedia', 'https://en.wikipedia.org/w'],
 	['ウィキペディア', 'https://ja.wikipedia.org/w'],
@@ -101,7 +101,7 @@ export const execute = async (parse: (wikitext: string) => unknown, retry = 10, 
 				i = 0;
 			for (let j = 0; j < retry; j++) {
 				for (const {content, title} of await getPages(`${url}/api.php`, site, grclimit)) {
-					refreshStdout(`${i++} ${title}`);
+					refreshStdout(`${++i} ${title}`);
 					try {
 						const start = perf.now();
 						parse(content);
@@ -133,7 +133,6 @@ export const execute = async (parse: (wikitext: string) => unknown, retry = 10, 
 	}
 };
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const tests: Test[] = require('wikiparser-node/test/parserTests.json');
 
 const split = (test?: TestResult): string[] | undefined =>
