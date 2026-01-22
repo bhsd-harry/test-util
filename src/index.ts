@@ -47,15 +47,23 @@ let c: Record<string, string> | undefined;
  * @param url api.php网址
  * @param site 站点名称
  * @param grclimit 页面数上限
+ * @param grcnamespace 命名空间
+ * @param contentmodel 内容模型
  */
-export const getPages = async (url: string, site?: string, grclimit = 'max'): Promise<SimplePage[]> => {
+export const getPages = async (
+	url: string,
+	site?: string,
+	grclimit = 'max',
+	grcnamespace = site === 'MediaWiki' ? '0|10|12|100|102|104|106' : '0|10',
+	contentmodel = 'wikitext',
+): Promise<SimplePage[]> => {
 	const qs = {
 			action: 'query',
 			format: 'json',
 			formatversion: '2',
 			errorformat: 'plaintext',
 			generator: 'recentchanges',
-			grcnamespace: site === 'MediaWiki' ? '0|10|12|100|102|104|106' : '0|10',
+			grcnamespace,
 			grclimit,
 			grctype: 'edit|new',
 			grctoponly: '1',
@@ -75,7 +83,7 @@ export const getPages = async (url: string, site?: string, grclimit = 'max'): Pr
 		pageid,
 		title,
 		ns,
-		content: revisions?.[0]?.contentmodel === 'wikitext' && revisions[0].content,
+		content: revisions?.[0]?.contentmodel === contentmodel && revisions[0].content,
 	})).filter((page): page is SimplePage => page.content !== false);
 };
 
@@ -89,8 +97,16 @@ export const reset = (): void => {
  * @param parse 解析函数
  * @param retry 重试次数
  * @param grclimit 页面数上限
+ * @param ns 命名空间
+ * @param model 内容模型
  */
-export const execute = async (parse: (wikitext: string) => unknown, retry = 10, grclimit?: string): Promise<void> => {
+export const execute = async (
+	parse: (wikitext: string, title: string) => unknown,
+	retry = 10,
+	grclimit?: string,
+	ns?: string,
+	model?: string,
+): Promise<void> => {
 	const failures = new Map<string, number>();
 	for (const [site, url] of apis) {
 		console.log(`开始检查${site}：`);
@@ -100,11 +116,11 @@ export const execute = async (parse: (wikitext: string) => unknown, retry = 10, 
 			let failed = 0,
 				i = 0;
 			for (let j = 0; j < retry; j++) {
-				for (const {content, title} of await getPages(`${url}/api.php`, site, grclimit)) {
+				for (const {content, title} of await getPages(`${url}/api.php`, site, grclimit, ns, model)) {
 					refreshStdout(`${++i} ${title}`);
 					try {
 						const start = perf.now();
-						parse(content);
+						parse(content, title);
 						const duration = perf.now() - start;
 						if (!worst || duration > worst.duration) {
 							worst = {title, duration};
@@ -172,7 +188,7 @@ export const mochaTest = (
 			}
 		}
 		if (beforeFn) {
-			before(beforeFn);
+			before(beforeFn as Mocha.Func);
 		}
 		after(() => {
 			fs.writeFileSync(
