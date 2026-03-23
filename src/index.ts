@@ -2,7 +2,7 @@ import fs from 'fs';
 import {execSync} from 'child_process';
 import assert from 'assert';
 import {performance as perf} from 'perf_hooks';
-import {refreshStdout} from '@bhsd/nodejs';
+import {refreshStdout, red} from '@bhsd/nodejs';
 
 declare const $VERSION: string;
 declare interface MediaWikiPage {
@@ -126,7 +126,7 @@ export const execute = async (
 							worst = {title, duration};
 						}
 					} catch (e) {
-						console.error(`\n解析 ${title} 页面时出错！`, e);
+						console.error(red(`\n解析 ${title} 页面时出错！`), e);
 						failed++;
 					}
 				}
@@ -136,13 +136,13 @@ export const execute = async (
 			}
 			console.log(`\n最耗时页面：${worst!.title} (${worst!.duration.toFixed(3)}ms)`);
 		} catch (e) {
-			console.error(`访问${site}的API端口时出错！`, e);
+			console.error(red(`访问${site}的API端口时出错！`), e);
 		}
 	}
 	if (failures.size > 0) {
 		let total = 0;
 		for (const [site, failed] of failures) {
-			console.error(`${site}：${failed} 个页面解析失败！`);
+			console.error(red(`${site}：${failed} 个页面解析失败！`));
 			total += failed;
 		}
 		throw new Error(`共有 ${total} 个页面解析失败！`);
