@@ -3,6 +3,7 @@ import {execSync} from 'child_process';
 import assert from 'assert';
 import {performance as perf} from 'perf_hooks';
 import {refreshStdout, red} from '@bhsd/nodejs';
+import tests from 'wikiparser-node/test/parserTests.json' with {type: 'json'};
 
 declare const $VERSION: string;
 declare interface MediaWikiPage {
@@ -149,8 +150,6 @@ export const execute = async (
 	}
 };
 
-const tests: Test[] = require('wikiparser-node/test/parserTests.json');
-
 const split = (test?: TestResult): string[] | undefined =>
 	test?.parsed?.split(/(?<=<\/>)(?!$)|(?<!^)(?=<\w)/u);
 
@@ -166,15 +165,12 @@ export const mochaTest = (
 			if (wikitext) {
 				it(desc, () => {
 					try {
-						delete test.html;
-						delete test.print;
-						delete test.render;
-						delete test.title;
-						test.parsed = parse(wikitext);
+						const rest = {desc, wikitext, parsed: parse(wikitext)};
 						assert.deepStrictEqual(
-							split(test),
+							split(rest),
 							split((results as TestResult[]).find(({desc: d}) => d === desc)),
 						);
+						tests[i] = rest as Test as typeof tests[number];
 					} catch (e) {
 						if (!(e instanceof assert.AssertionError)) {
 							tests.splice(i, 1);

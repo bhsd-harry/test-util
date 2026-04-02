@@ -8,7 +8,7 @@
 			"mocha"
 		],
 		"target": "ES2024",
-		"module": "NodeNext",
+		"module": "esnext",
 		"declaration": true,
 		"emitDeclarationOnly": true,
 		"rootDir": "src",

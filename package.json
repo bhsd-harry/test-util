@@ -1,6 +1,6 @@
 {
 	"name": "@bhsd/test-util",
-	"version": "0.4.0",
+	"version": "1.0.0",
 	"homepage": "https://github.com/bhsd-harry/test-util#readme",
 	"bugs": {
 		"url": "https://github.com/bhsd-harry/test-util/issues"
@@ -12,9 +12,10 @@
 	],
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
+	"type": "module",
 	"scripts": {
 		"prepublishOnly": "npm run build",
-		"build": "tsc && node build.js",
+		"build": "tsc && node build.cjs",
 		"lint:ts": "tsc --noEmit && eslint --cache .",
 		"lint": "npm run lint:ts"
 	},

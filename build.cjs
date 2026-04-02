@@ -6,8 +6,8 @@ const esbuild = require('esbuild'),
 esbuild.buildSync({
 	entryPoints: ['src/index.ts'],
 	charset: 'utf8',
-	target: 'es2024',
-	format: 'cjs',
+	target: 'esnext',
+	format: 'esm',
 	define: {
 		$VERSION: JSON.stringify(version),
 	},
