@@ -166,11 +166,11 @@ export const mochaTest = (
 				it(desc, () => {
 					try {
 						const rest = {desc, wikitext, parsed: parse(wikitext)};
+						tests[i] = rest as Test as typeof tests[number];
 						assert.deepStrictEqual(
 							split(rest),
 							split((results as TestResult[]).find(({desc: d}) => d === desc)),
 						);
-						tests[i] = rest as Test as typeof tests[number];
 					} catch (e) {
 						if (!(e instanceof assert.AssertionError)) {
 							tests.splice(i, 1);
