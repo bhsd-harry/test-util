@@ -127,7 +127,8 @@ export const execute = async (
 							worst = {title, duration};
 						}
 					} catch (e) {
-						console.error(red(`\n解析 ${title} 页面时出错！`), e);
+						console.error(red(`\n解析 ${title} 页面时出错！`));
+						console.error(e);
 						failed++;
 					}
 				}
@@ -137,7 +138,8 @@ export const execute = async (
 			}
 			console.log(`\n最耗时页面：${worst!.title} (${worst!.duration.toFixed(3)}ms)`);
 		} catch (e) {
-			console.error(red(`访问${site}的API端口时出错！`), e);
+			console.error(red(`访问${site}的API端口时出错！`));
+			console.error(e);
 		}
 	}
 	if (failures.size > 0) {
@@ -150,8 +152,8 @@ export const execute = async (
 	}
 };
 
-const split = (test?: TestResult): string[] | undefined =>
-	test?.parsed?.split(/(?<=<\/>)(?!$)|(?<!^)(?=<\w)/u);
+export const split = (str?: string): string[] | undefined =>
+	str?.split(/(?<=<\/[^>]*>)(?!$)|(?<!^)(?=<(?!\/))/u);
 
 export const mochaTest = (
 	results: unknown,
@@ -159,21 +161,22 @@ export const mochaTest = (
 	beforeFn?: Mocha.Func | Mocha.AsyncFunc,
 ): void => {
 	describe('Parser tests', () => {
-		for (let i = tests.length - 1; i >= 0; i--) {
-			const test = tests[i]!,
+		const copy = [...tests] as Test[];
+		for (let i = copy.length - 1; i >= 0; i--) {
+			const test = copy[i]!,
 				{wikitext, desc} = test;
 			if (wikitext) {
 				it(desc, () => {
 					try {
 						const rest = {desc, wikitext, parsed: parse(wikitext)};
-						tests[i] = rest as Test as typeof tests[number];
+						copy[i] = rest;
 						assert.deepStrictEqual(
-							split(rest),
-							split((results as TestResult[]).find(({desc: d}) => d === desc)),
+							split(rest.parsed),
+							split((results as TestResult[]).find(({desc: d}) => d === desc)?.parsed),
 						);
 					} catch (e) {
 						if (!(e instanceof assert.AssertionError)) {
-							tests.splice(i, 1);
+							copy.splice(i, 1);
 						}
 						if (e instanceof Error) {
 							Object.assign(e, {cause: {message: `\n${wikitext}`}});
@@ -189,7 +192,7 @@ export const mochaTest = (
 		after(() => {
 			fs.writeFileSync(
 				'test/parserTests.json',
-				`${JSON.stringify(tests, null, '\t')}\n`,
+				`${JSON.stringify(copy, null, '\t')}\n`,
 			);
 		});
 	});
