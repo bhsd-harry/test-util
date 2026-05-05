@@ -3,7 +3,7 @@ import {execSync} from 'child_process';
 import assert from 'assert';
 import {performance as perf} from 'perf_hooks';
 import {refreshStdout, red} from '@bhsd/nodejs';
-import tests from 'wikiparser-node/test/parserTests.json' with {type: 'json'};
+import tests from '../parserTests.json' with {type: 'json'};
 
 declare const $VERSION: string;
 declare interface MediaWikiPage {
