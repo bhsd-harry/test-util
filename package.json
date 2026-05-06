@@ -5,7 +5,7 @@
 	"bugs": {
 		"url": "https://github.com/bhsd-harry/test-util/issues"
 	},
-	"license": "MIT",
+	"license": "GPL-3.0-or-later",
 	"author": "Bhsd",
 	"files": [
 		"/dist/",
