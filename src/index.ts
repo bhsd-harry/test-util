@@ -43,11 +43,11 @@ declare interface Coverage {
 	};
 }
 
-export const apis = [
+export const apis: [string, string][] = [
 	['维基百科', 'https://zh.wikipedia.org/w'],
 	['Wikipedia', 'https://en.wikipedia.org/w'],
 	['ウィキペディア', 'https://ja.wikipedia.org/w'],
-] as const;
+];
 
 let c: Record<string, string> | undefined;
 
@@ -88,12 +88,15 @@ export const getPages = async (
 			},
 		})).json();
 	c = response.continue; // eslint-disable-line require-atomic-updates
-	return response.query.pages.map(({pageid, title, ns, revisions}) => ({
+	return response.query.pages.filter(({revisions}) => {
+		const revision = revisions?.[0];
+		return (!contentmodel || revision?.contentmodel === contentmodel) && Boolean(revision?.content);
+	}).map(({pageid, title, ns, revisions}): SimplePage => ({
 		pageid,
 		title,
 		ns,
-		content: revisions?.[0]?.contentmodel === contentmodel && revisions[0].content,
-	})).filter((page): page is SimplePage => page.content !== false);
+		content: revisions![0]!.content,
+	}));
 };
 
 /** 重置请求 */
@@ -108,6 +111,7 @@ export const reset = (): void => {
  * @param grclimit 页面数上限
  * @param ns 命名空间
  * @param model 内容模型
+ * @param sites 站点列表
  */
 export const execute = async (
 	parse: (wikitext: string, title: string) => unknown,
@@ -115,9 +119,10 @@ export const execute = async (
 	grclimit?: string,
 	ns?: string,
 	model?: string,
+	sites = apis,
 ): Promise<void> => {
 	const failures = new Map<string, number>();
-	for (const [site, url] of apis) {
+	for (const [site, url] of sites) {
 		console.log(`开始检查${site}：`);
 		let worst: {title: string, duration: number} | undefined;
 		reset();
