@@ -35,6 +35,14 @@ export interface Test {
 }
 declare type TestResult = Pick<Test, 'desc' | 'wikitext' | 'parsed'>;
 
+declare interface Coverage {
+	total: {
+		statements: {
+			pct: number;
+		};
+	};
+}
+
 export const apis = [
 	['维基百科', 'https://zh.wikipedia.org/w'],
 	['Wikipedia', 'https://en.wikipedia.org/w'],
@@ -196,4 +204,26 @@ export const mochaTest = (
 			);
 		});
 	});
+};
+
+export const updateBadge = (): void => {
+	const {total: {statements: {pct}}}: Coverage = JSON.parse(
+			fs.readFileSync('coverage/coverage-summary.json', 'utf8'),
+		),
+		colors = ['#4c1', '#dfb317', '#e05d44'] as const;
+	let color: string;
+	if (pct >= 80) {
+		[color] = colors;
+	} else if (pct >= 60) {
+		[, color] = colors;
+	} else {
+		[,, color] = colors;
+	}
+	fs.writeFileSync(
+		'coverage/badge.svg',
+		fs.readFileSync('coverage/badge.svg', 'utf8').replaceAll(
+			new RegExp(String.raw`(?:${colors.join('|')})\b|\b\d{2}(?=%)`, 'gu'),
+			m => m.startsWith('#') ? color : String(Math.round(pct)),
+		),
+	);
 };
