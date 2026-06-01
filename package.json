@@ -1,6 +1,6 @@
 {
 	"name": "@bhsd/test-util",
-	"version": "1.4.0",
+	"version": "1.5.0",
 	"homepage": "https://github.com/bhsd-harry/test-util#readme",
 	"bugs": {
 		"url": "https://github.com/bhsd-harry/test-util/issues"
@@ -21,15 +21,23 @@
 		"lint:ts": "tsc --noEmit && eslint --cache .",
 		"lint": "npm run lint:ts"
 	},
+	"peerDependencies": {
+		"mocha": ">=7.1.0"
+	},
+	"peerDependenciesMeta": {
+		"mocha": {
+			"optional": true
+		}
+	},
 	"dependencies": {
 		"@bhsd/nodejs": "^1.0.1",
-		"@types/mocha": "^10.0.10",
-		"mocha": "^11.7.6"
+		"@types/mocha": "^10.0.10"
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^2.6.0",
+		"@bhsd/code-standard": "^2.6.2",
 		"esbuild": "^0.28.0",
 		"eslint": "^10.4.1",
+		"mocha": "^11.7.6",
 		"typescript": "^6.0.3",
 		"wikiparser-node": "^1.42.0"
 	},
