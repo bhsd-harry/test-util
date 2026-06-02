@@ -43,6 +43,13 @@ declare interface Coverage {
 	};
 }
 
+export interface ApiOptions {
+	site?: string | undefined;
+	grclimit?: string | undefined;
+	grcnamespace?: string | undefined;
+	contentmodel?: string | undefined;
+}
+
 export const apis: [string, string][] = [
 	['维基百科', 'https://zh.wikipedia.org/w'],
 	['Wikipedia', 'https://en.wikipedia.org/w'],
@@ -54,17 +61,20 @@ let c: Record<string, string> | undefined;
 /**
  * 获取最近更改的页面源代码
  * @param url api.php网址
- * @param site 站点名称
- * @param grclimit 页面数上限
- * @param grcnamespace 命名空间
- * @param contentmodel 内容模型
+ * @param opt 选项
+ * @param opt.site 站点名称
+ * @param opt.grclimit 页面数上限
+ * @param opt.grcnamespace 命名空间
+ * @param opt.contentmodel 内容模型
  */
 export const getPages = async (
 	url: string,
-	site?: string,
-	grclimit = 'max',
-	grcnamespace = site === 'MediaWiki' ? '0|10|12|100|102|104|106' : '0|10',
-	contentmodel = 'wikitext',
+	{
+		site,
+		grclimit = 'max',
+		grcnamespace = site === 'MediaWiki' ? '0|10|12|100|102|104|106' : '0|10',
+		contentmodel = 'wikitext',
+	}: ApiOptions,
 ): Promise<SimplePage[]> => {
 	const qs = {
 			action: 'query',
@@ -107,18 +117,12 @@ export const reset = (): void => {
 /**
  * 执行解析测试
  * @param parse 解析函数
- * @param retry 重试次数
- * @param grclimit 页面数上限
- * @param ns 命名空间
- * @param model 内容模型
+ * @param opt 选项
  * @param sites 站点列表
  */
 export const execute = async (
 	parse: (wikitext: string, title: string) => unknown,
-	retry = 10,
-	grclimit?: string,
-	ns?: string,
-	model?: string,
+	opt?: Omit<ApiOptions, 'site'>,
 	sites = apis,
 ): Promise<void> => {
 	const failures = new Map<string, number>();
@@ -129,8 +133,8 @@ export const execute = async (
 		try {
 			let failed = 0,
 				i = 0;
-			for (let j = 0; j < retry; j++) {
-				for (const {content, title} of await getPages(`${url}/api.php`, site, grclimit, ns, model)) {
+			for (let j = 0; j < 10; j++) {
+				for (const {content, title} of await getPages(`${url}/api.php`, {...opt, site})) {
 					refreshStdout(`${++i} ${title}`);
 					try {
 						const start = perf.now();

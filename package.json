@@ -1,6 +1,6 @@
 {
 	"name": "@bhsd/test-util",
-	"version": "1.5.0",
+	"version": "2.0.0",
 	"homepage": "https://github.com/bhsd-harry/test-util#readme",
 	"bugs": {
 		"url": "https://github.com/bhsd-harry/test-util/issues"
@@ -34,12 +34,12 @@
 		"@types/mocha": "^10.0.10"
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^2.6.2",
+		"@bhsd/code-standard": "^2.7.0",
 		"esbuild": "^0.28.0",
 		"eslint": "^10.4.1",
 		"mocha": "^11.7.6",
 		"typescript": "^6.0.3",
-		"wikiparser-node": "^1.42.0"
+		"wikiparser-node": "^1.44.0"
 	},
 	"engines": {
 		"node": "^20.19.0 || ^22.13.0 || >=24.11.0"
