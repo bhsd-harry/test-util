@@ -34,9 +34,9 @@
 		"@types/mocha": "^10.0.10"
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^2.7.0",
-		"esbuild": "^0.28.0",
-		"eslint": "^10.4.1",
+		"@bhsd/code-standard": "^3.0.0",
+		"esbuild": "^0.28.1",
+		"eslint": "^10.5.0",
 		"mocha": "^11.7.6",
 		"typescript": "^6.0.3",
 		"wikiparser-node": "^1.44.0"
