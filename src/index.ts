@@ -1,9 +1,6 @@
 import fs from 'fs';
 import {execSync} from 'child_process';
-import assert from 'assert';
-import {performance as perf} from 'perf_hooks';
 import {refreshStdout, red} from '@bhsd/nodejs';
-import tests from '../parserTests.json' with {type: 'json'};
 
 declare const $VERSION: string;
 declare interface MediaWikiPage {
@@ -24,16 +21,6 @@ declare interface MediaWikiResponse {
 export interface SimplePage extends Pick<MediaWikiPage, 'pageid' | 'title' | 'ns'> {
 	readonly content: string;
 }
-export interface Test {
-	desc: string;
-	title?: string | undefined;
-	wikitext?: string;
-	parsed?: string;
-	html?: string;
-	print?: string;
-	render?: string;
-}
-declare type TestResult = Pick<Test, 'desc' | 'wikitext' | 'parsed'>;
 
 declare interface Coverage {
 	total: {
@@ -137,9 +124,9 @@ export const execute = async (
 				for (const {content, title} of await getPages(`${url}/api.php`, {...opt, site})) {
 					refreshStdout(`${++i} ${title}`);
 					try {
-						const start = perf.now();
+						const start = performance.now();
 						parse(content, title);
-						const duration = perf.now() - start;
+						const duration = performance.now() - start;
 						if (!worst || duration > worst.duration) {
 							worst = {title, duration};
 						}
@@ -167,52 +154,6 @@ export const execute = async (
 		}
 		throw new Error(`共有 ${total} 个页面解析失败！`);
 	}
-};
-
-export const split = (str?: string): string[] | undefined =>
-	str?.split(/(?<=<\/[^>]*>)(?!$)|(?<!^)(?=<(?!\/))/u);
-
-export const mochaTest = (
-	results: unknown,
-	parse: (wikitext: string) => string,
-	beforeFn?: Mocha.Func | Mocha.AsyncFunc,
-): void => {
-	describe('Parser tests', () => {
-		const copy = [...tests] as Test[];
-		for (let i = copy.length - 1; i >= 0; i--) {
-			const test = copy[i]!,
-				{wikitext, desc} = test;
-			if (wikitext) {
-				it(desc, () => {
-					try {
-						const rest = {desc, wikitext, parsed: parse(wikitext)};
-						copy[i] = rest;
-						assert.deepStrictEqual(
-							split(rest.parsed),
-							split((results as TestResult[]).find(({desc: d}) => d === desc)?.parsed),
-						);
-					} catch (e) {
-						if (!(e instanceof assert.AssertionError)) {
-							copy.splice(i, 1);
-						}
-						if (e instanceof Error) {
-							Object.assign(e, {cause: {message: `\n${wikitext}`}});
-						}
-						throw e;
-					}
-				});
-			}
-		}
-		if (beforeFn) {
-			before(beforeFn as Mocha.Func);
-		}
-		after(() => {
-			fs.writeFileSync(
-				'test/parserTests.json',
-				`${JSON.stringify(copy, null, '\t')}\n`,
-			);
-		});
-	});
 };
 
 export const updateBadge = (): void => {

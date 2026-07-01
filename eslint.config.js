@@ -7,4 +7,10 @@ export default extend(
 	{
 		ignores: ['parserTests.json'],
 	},
+	{
+		files: ['src/bin.ts'],
+		rules: {
+			'n/hashbang': 0,
+		},
+	},
 );

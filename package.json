@@ -11,8 +11,16 @@
 		"/dist/",
 		"/parserTests.json"
 	],
+	"bin": {
+		"testUtil": "./dist/bin.js"
+	},
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
+	"exports": {
+		".": "./dist/index.js",
+		"./mocha": "./dist/mocha.js",
+		"./parser": "./dist/parser.js"
+	},
 	"type": "module",
 	"scripts": {
 		"ls": "npm i --package-lock-only && npm ls --package-lock-only --all --omit=dev",
@@ -21,25 +29,16 @@
 		"lint:ts": "tsc --noEmit && eslint --cache .",
 		"lint": "npm run lint:ts"
 	},
-	"peerDependencies": {
-		"mocha": ">=7.1.0"
-	},
-	"peerDependenciesMeta": {
-		"mocha": {
-			"optional": true
-		}
-	},
 	"dependencies": {
-		"@bhsd/nodejs": "^1.0.1",
+		"@bhsd/nodejs": "^1.2.0",
 		"@types/mocha": "^10.0.10"
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^3.0.0",
+		"@bhsd/code-standard": "^3.1.0",
 		"esbuild": "^0.28.1",
-		"eslint": "^10.5.0",
-		"mocha": "^11.7.6",
+		"eslint": "^10.6.0",
 		"typescript": "^6.0.3",
-		"wikiparser-node": "^1.44.0"
+		"wikiparser-node": "^1.45.0"
 	},
 	"engines": {
 		"node": "^20.19.0 || ^22.13.0 || >=24.11.0"

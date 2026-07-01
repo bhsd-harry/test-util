@@ -4,13 +4,11 @@
 	],
 	"compilerOptions": {
 		"types": [
-			"node",
-			"mocha"
+			"node"
 		],
 		"target": "ES2024",
 		"module": "esnext",
 		"declaration": true,
-		"emitDeclarationOnly": true,
 		"rootDir": "src",
 		"outDir": "dist",
 		"alwaysStrict": true,
