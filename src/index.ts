@@ -1,6 +1,7 @@
 import fs from 'fs';
 import {execSync} from 'child_process';
 import {refreshStdout, red} from '@bhsd/nodejs';
+import type {EventData} from 'node:test';
 
 declare const $VERSION: string;
 declare interface MediaWikiPage {
@@ -157,10 +158,17 @@ export const execute = async (
 };
 
 export const updateBadge = (): void => {
-	const {total: {statements: {pct}}}: Coverage = JSON.parse(
+	let pct: number;
+	if (fs.existsSync('coverage/coverage.json')) {
+		pct = (JSON.parse(
+			fs.readFileSync('coverage/coverage.json', 'utf8'),
+		) as EventData.TestCoverage['summary']).totals.coveredLinePercent;
+	} else {
+		({pct} = (JSON.parse(
 			fs.readFileSync('coverage/coverage-summary.json', 'utf8'),
-		),
-		colors = ['#4c1', '#dfb317', '#e05d44'] as const;
+		) as Coverage).total.statements);
+	}
+	const colors = ['#4c1', '#dfb317', '#e05d44'] as const;
 	let color: string;
 	if (pct >= 80) {
 		[color] = colors;

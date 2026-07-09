@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import fs from 'fs';
+import path from 'path';
 import {styleText} from 'util';
 import readline from 'readline';
 import {finished} from 'stream/promises';
@@ -9,7 +11,13 @@ import type {TestsStream, EventData, RunOptions} from 'node:test';
 
 const args = process.argv.slice(2),
 	files = args.filter(arg => !arg.startsWith('-')),
-	execArgv = args.filter(arg => arg.startsWith('-')),
+	includeArgs = '--test-coverage-include=',
+	timeoutArg = '--test-timeout=',
+	timeout = Number(args.find(arg => arg.startsWith(timeoutArg))?.slice(timeoutArg.length)),
+	coverageIncludeGlobs = args.filter(arg => arg.startsWith(includeArgs)).map(arg => arg.slice(includeArgs.length)),
+	execArgv = args.filter(
+		arg => arg.startsWith('-') && !arg.startsWith(includeArgs) && !arg.startsWith(timeoutArg),
+	),
 	cwd = process.cwd(),
 	width = Math.round(process.stdout.columns / 2) - 1;
 
@@ -20,6 +28,10 @@ const endStream = async (stream: TestsStream): Promise<void> => {
 
 const stat = (color: InspectColor, count: number | string, label: string): string =>
 	`  ${styleText(color, `${count} ${label}`)}`;
+
+const pad = (num: number, length = 8): string => `${num.toFixed(2).padStart(length)} `;
+
+const greenBold = (str: string[]): string => str.map(s => `${styleText(['green', 'bold'], s)}|`).join('');
 
 const isTrace = (line: string): boolean => line.trim().startsWith('at ');
 
@@ -52,66 +64,95 @@ const rewrite = (line: string): void => {
 	await endStream(skipStream);
 	rewrite('');
 	clearInterval(progressRenderer);
-	console.log();
 
 	// 2. Run the tests and track progress
+	if (coverageIncludeGlobs.length > 0) {
+		console.log(gray('Coverage includes:'), coverageIncludeGlobs);
+	}
+	console.log();
 	let completed = 0,
 		passed = 0,
 		skipped = 0,
-		failed = 0;
+		failed = 0,
+		coverage: EventData.TestCoverage['summary'] | undefined;
 	const renderProgressBar = (): void => {
 		const percent = total === 0 ? 1 : Math.min(1, completed / total);
 		rewrite(`  ${gray('[')}${
 			'▬'.repeat(Math.round(percent * width)).padEnd(width, '.')
 		}${gray(']')}`);
 	};
-	const failures: {path: string[], error: Error}[] = [],
+	const failures: {paths: string[], error: Error}[] = [],
+		stderrs = new Map<string, string>(),
 		registry = new Map<string, {name: string, parentId: number | undefined}>(),
+		controller = new AbortController(),
+		{signal} = controller,
 		start = performance.now(),
 		testStream = run({
 			...opts,
+			coverage: coverageIncludeGlobs.length > 0,
+			coverageIncludeGlobs,
+			...timeout && {signal},
 			setup(stream) {
+				let timer: NodeJS.Timeout | undefined;
 				stream.on(
 					'test:start',
 					({file = '', name, testId, parentId}: EventData.TestStart & {parentId?: number}) => {
 						registry.set(`${file}-${testId}`, {name, parentId});
 					},
-				).on(
-					'test:complete',
-					({
-						details: {type, passed: p, error},
-						skip,
-						name,
-						file = '',
-						parentId,
-					}: EventData.TestComplete & {parentId?: number}) => {
-						if (type === 'test') {
-							completed++;
-						}
-						if (skip) {
-							skipped++;
-						} else if (type === 'test') {
-							if (p) {
-								passed++;
-							} else {
-								failed++;
-								const path = [name];
+				)
+					.on('test:stderr', ({file, message}) => {
+						stderrs.set(file, (stderrs.get(file) ?? '') + message);
+					})
+					.on(
+						'test:complete',
+						({
+							details: {type, passed: p, error},
+							skip,
+							name,
+							file = '',
+							parentId,
+						}: EventData.TestComplete & {parentId?: number}) => {
+							if (type === 'test') {
+								completed++;
+							}
+							if (skip) {
+								skipped++;
+							} else if (type === 'test') {
+								if (p) {
+									passed++;
+								} else {
+									failed++;
+								}
+							}
+							if (error?.cause instanceof Error) {
+								const paths = [name];
 								while (parentId !== undefined) {
 									const entry = registry.get(`${file}-${parentId}`);
 									if (!entry) {
 										break;
 									}
-									path.push(entry.name);
+									paths.push(entry.name);
 									({parentId} = entry); // eslint-disable-line no-param-reassign
 								}
 								failures.push({
-									path,
-									error: error!.cause instanceof Error ? error!.cause : error!,
+									paths,
+									error: error.cause,
 								});
 							}
-						}
-					},
-				);
+						},
+					)
+					.on('test:coverage', ({summary}) => {
+						fs.writeFileSync(path.join(cwd, 'coverage', 'coverage.json'), JSON.stringify(summary));
+						coverage = summary;
+					})
+					.on('end', () => {
+						clearInterval(timer);
+					});
+				if (timeout) {
+					timer = setTimeout(() => {
+						controller.abort();
+					}, timeout);
+				}
 			},
 		}),
 		renderer = setInterval(renderProgressBar, 50);
@@ -141,14 +182,43 @@ const rewrite = (line: string): void => {
 		console.error(stat('red', `${completed}/${total}`, 'completed'));
 	}
 	console.log();
+	if (coverage) {
+		const {files: f, totals: {coveredBranchPercent, coveredFunctionPercent, coveredLinePercent}} = coverage,
+			l = Math.max(8, ...f.map(({path: p}) => path.relative(cwd, p).length)) + 2,
+			border = `${'-'.repeat(l)}|----------|---------|---------|`;
+		console.log(
+			`${border}
+${'File'.padEnd(l)}| % Branch | % Funcs | % Lines |
+${border}
+${
+	greenBold([
+		'All files'.padEnd(l),
+		pad(coveredBranchPercent, 9),
+		pad(coveredFunctionPercent),
+		pad(coveredLinePercent),
+	])
+	}
+${
+	f.map(
+		({path: p, coveredBranchPercent: cb, coveredFunctionPercent: cf, coveredLinePercent: cl}) =>
+			greenBold([` ${path.relative(cwd, p).padEnd(l - 1)}`, pad(cb, 9), pad(cf), pad(cl)]),
+	).join('\n')
+	}
+${border}
+`,
+		);
+	}
+	for (const [file, stderr] of stderrs) {
+		console.error(` Exception during run: ${file}\n${stderr}`);
+	}
 	for (let i = 0; i < failures.length; i++) {
-		const {path, error: {stack, message, cause}} = failures[i]!,
+		const {paths, error: {stack, message, cause}} = failures[i]!,
 			prefix = `  ${i + 1}) `;
 		let {length} = prefix;
-		console.log(`${prefix}${path.pop()}`);
-		while (path.length > 0) {
+		console.log(`${prefix}${paths.pop()}`);
+		while (paths.length > 0) {
 			length += 2;
-			console.log(' '.repeat(length) + path.pop());
+			console.log(' '.repeat(length) + paths.pop());
 		}
 		console.error(
 			' '.repeat(5) + (
