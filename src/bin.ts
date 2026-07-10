@@ -9,14 +9,18 @@ import {red, gray} from '@bhsd/nodejs';
 import type {InspectColor} from 'util';
 import type {TestsStream, EventData, RunOptions} from 'node:test';
 
+const getValues = (args: string[], key: string): string[] =>
+	args.filter(arg => arg.startsWith(key)).map(arg => arg.slice(key.length + 1));
+
 const args = process.argv.slice(2),
 	files = args.filter(arg => !arg.startsWith('-')),
-	includeArgs = '--test-coverage-include=',
-	timeoutArg = '--test-timeout=',
-	timeout = Number(args.find(arg => arg.startsWith(timeoutArg))?.slice(timeoutArg.length)),
-	coverageIncludeGlobs = args.filter(arg => arg.startsWith(includeArgs)).map(arg => arg.slice(includeArgs.length)),
+	includeArgs = '--test-coverage-include',
+	timeoutArg = '--test-timeout',
+	known = new Set([includeArgs, timeoutArg]),
+	timeout = Number(getValues(args, timeoutArg).at(-1)),
+	coverageIncludeGlobs = getValues(args, includeArgs),
 	execArgv = args.filter(
-		arg => arg.startsWith('-') && !arg.startsWith(includeArgs) && !arg.startsWith(timeoutArg),
+		arg => arg.startsWith('-') && !known.has(arg.split('=', 1)[0]!),
 	),
 	cwd = process.cwd(),
 	width = Math.round(process.stdout.columns / 2) - 1;
@@ -74,12 +78,16 @@ const rewrite = (line: string): void => {
 		passed = 0,
 		skipped = 0,
 		failed = 0,
+		last: number | undefined,
 		coverage: EventData.TestCoverage['summary'] | undefined;
 	const renderProgressBar = (): void => {
 		const percent = total === 0 ? 1 : Math.min(1, completed / total);
-		rewrite(`  ${gray('[')}${
-			'▬'.repeat(Math.round(percent * width)).padEnd(width, '.')
-		}${gray(']')}`);
+		if (percent !== last) {
+			last = percent;
+			rewrite(`  ${gray('[')}${
+				'▬'.repeat(Math.round(percent * width)).padEnd(width, '.')
+			}${gray(']')}`);
+		}
 	};
 	const failures: {paths: string[], error: Error}[] = [],
 		stderrs = new Map<string, string>(),
@@ -95,8 +103,8 @@ const rewrite = (line: string): void => {
 			setup(stream) {
 				let timer: NodeJS.Timeout | undefined;
 				stream.on(
-					'test:start',
-					({file = '', name, testId, parentId}: EventData.TestStart & {parentId?: number}) => {
+					'test:dequeue',
+					({file = '', name, testId, parentId}: EventData.TestDequeue & {parentId?: number}) => {
 						registry.set(`${file}-${testId}`, {name, parentId});
 					},
 				)
@@ -159,18 +167,22 @@ const rewrite = (line: string): void => {
 	await endStream(testStream);
 	renderProgressBar();
 	clearInterval(renderer);
-	const elapsed = performance.now() - start;
-	let seconds: string;
-	if (elapsed < 1e3) {
-		seconds = `${Math.round(elapsed)}ms`;
-	} else if (elapsed < 9e4) {
-		seconds = `${Math.round(elapsed / 1e3)}s`;
-	} else {
-		seconds = `${Math.round(elapsed / 6e4)}m`;
+	if (completed < total) {
+		process.stdout.write(gray(` ${completed} of ${total}`) as string);
 	}
 
 	// 3. Log the results
-	console.log(`\n\n${stat('green', passed, 'passing')} ${gray(`(${seconds})`)}`);
+	const elapsed = performance.now() - start;
+	let ms: string;
+	if (elapsed < 1e3) {
+		ms = `${Math.round(elapsed)}ms`;
+	} else {
+		const seconds = Math.round(elapsed / 1e3),
+			minutes = Math.floor(seconds / 60),
+			res = minutes < 10 ? seconds % 60 : 0;
+		ms = (minutes === 0 ? '' : `${minutes}m`) + (res ? `${res}s` : '');
+	}
+	console.log(`\n\n${stat('green', passed, 'passing')} ${gray(`(${ms})`)}`);
 	if (skipped) {
 		console.log(stat('cyan', skipped, 'pending'));
 	}
@@ -179,7 +191,7 @@ const rewrite = (line: string): void => {
 		console.log(stat('red', failed, 'failing'));
 	}
 	if (completed > total) {
-		console.error(stat('red', `${completed}/${total}`, 'completed'));
+		console.error(stat('red', `${completed} / ${total}`, 'completed'));
 	}
 	console.log();
 	if (coverage) {
