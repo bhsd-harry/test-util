@@ -187,7 +187,7 @@ const rewrite = (line: string): void => {
 		renderProgressBar();
 		clearInterval(renderer);
 		if (completed < total) {
-			process.stdout.write(gray(` ${completed} of ${total}`) as string);
+			process.stdout.write(gray(` ${completed} of ${total}`));
 		}
 	}
 
