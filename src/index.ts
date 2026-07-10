@@ -185,3 +185,26 @@ export const updateBadge = (): void => {
 		),
 	);
 };
+
+export const findUncoveredBlocks = (input: string, output: string, file: string, threshold = 20): void => {
+	const {files}: EventData.TestCoverage['summary'] = JSON.parse(fs.readFileSync(input, 'utf8')),
+		filePath = fs.realpathSync(file),
+		coverage = files.find(({path}) => path === filePath);
+	if (!coverage) {
+		throw new RangeError(`未找到文件 ${filePath} 的覆盖率数据！`);
+	}
+	const uncovered = coverage.lines.filter(({count}) => count === 0).map(({line}) => line),
+		uncoveredBlocks: string[] = [];
+	for (let i = 0, j = 0, start = uncovered[0]!; i < uncovered.length; i++) {
+		const line = uncovered[i]!,
+			count = i - j;
+		if (line - start > count) {
+			if (count >= threshold) {
+				uncoveredBlocks.push(`${start}-${start + count - 1}`);
+			}
+			j = i;
+			start = line;
+		}
+	}
+	fs.writeFileSync(output, uncoveredBlocks.join('\n'));
+};
