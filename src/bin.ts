@@ -5,7 +5,7 @@ import {styleText} from 'util';
 import readline from 'readline';
 import {finished} from 'stream/promises';
 import {run} from 'node:test';
-import {red, gray} from '@bhsd/nodejs';
+import {red, green, yellow, gray} from '@bhsd/nodejs';
 import type {InspectColor} from 'util';
 import type {TestsStream, EventData, RunOptions} from 'node:test';
 
@@ -16,9 +16,11 @@ const args = process.argv.slice(2),
 	files = args.filter(arg => !arg.startsWith('-')),
 	includeArgs = '--test-coverage-include',
 	timeoutArg = '--test-timeout',
-	known = new Set([includeArgs, timeoutArg]),
-	timeout = Number(getValues(args, timeoutArg).at(-1)),
+	reporterArg = '--test-reporter',
+	known = new Set([includeArgs, timeoutArg, reporterArg]),
 	coverageIncludeGlobs = getValues(args, includeArgs),
+	timeout = Number(getValues(args, timeoutArg).at(-1)),
+	reporter = getValues(args, reporterArg).at(-1),
 	execArgv = args.filter(
 		arg => arg.startsWith('-') && !known.has(arg.split('=', 1)[0]!),
 	),
@@ -46,28 +48,31 @@ const rewrite = (line: string): void => {
 };
 
 (async () => {
-	// 1. Count the total number of atomic tests that will be run
+	const opts: RunOptions = {files, concurrency: true, execArgv};
 	let total = 0;
-	const renderProgress = (): void => {
-		rewrite(`  ${gray(`Preparing tests: ${total}`)}`);
-	};
-	const opts: RunOptions = {files, concurrency: true, execArgv},
-		pre = '@bhsd/test-util:',
-		skipStream = run({
-			...opts,
-			argv: ['skip'],
-			setup(stream) {
-				stream.on('test:complete', ({name, details: {type}}) => {
-					if (type === 'test') {
-						total += name.startsWith(pre) ? Number(name.slice(pre.length)) : 1;
-					}
-				});
-			},
-		}),
-		progressRenderer = setInterval(renderProgress, 100);
-	await endStream(skipStream);
-	rewrite('');
-	clearInterval(progressRenderer);
+
+	if (reporter !== 'spec') {
+		// 1. Count the total number of atomic tests that will be run
+		const renderProgress = (): void => {
+			rewrite(`  ${gray(`Preparing tests: ${total}`)}`);
+		};
+		const pre = '@bhsd/test-util:',
+			skipStream = run({
+				...opts,
+				argv: ['skip'],
+				setup(stream) {
+					stream.on('test:complete', ({name, details: {type}}) => {
+						if (type === 'test') {
+							total += name.startsWith(pre) ? Number(name.slice(pre.length)) : 1;
+						}
+					});
+				},
+			}),
+			progressRenderer = setInterval(renderProgress, 100);
+		await endStream(skipStream);
+		rewrite('');
+		clearInterval(progressRenderer);
+	}
 
 	// 2. Run the tests and track progress
 	if (coverageIncludeGlobs.length > 0) {
@@ -114,24 +119,13 @@ const rewrite = (line: string): void => {
 					.on(
 						'test:complete',
 						({
-							details: {type, passed: p, error},
+							details: {type, passed: p, error, duration_ms: duration},
 							skip,
 							name,
 							file = '',
 							parentId,
+							nesting,
 						}: EventData.TestComplete & {parentId?: number}) => {
-							if (type === 'test') {
-								completed++;
-							}
-							if (skip) {
-								skipped++;
-							} else if (type === 'test') {
-								if (p) {
-									passed++;
-								} else {
-									failed++;
-								}
-							}
 							if (error?.cause instanceof Error) {
 								const paths = [name];
 								while (parentId !== undefined) {
@@ -146,6 +140,28 @@ const rewrite = (line: string): void => {
 									paths,
 									error: error.cause,
 								});
+							}
+							if (type === 'test') {
+								completed++;
+							}
+							if (skip) {
+								skipped++;
+							} else if (type === 'test') {
+								if (p) {
+									passed++;
+								} else {
+									failed++;
+								}
+								if (reporter === 'spec' && nesting) {
+									if (p) {
+										const elapsed = duration > 200
+											? (duration > 500 ? red : yellow)(` (${Math.round(duration)}ms)`)
+											: '';
+										console.log(`  ${green('✔')} ${gray(name)}${elapsed}`);
+									} else {
+										console.log(red(`  ${failures.length}) ${name}`));
+									}
+								}
 							}
 						},
 					)
@@ -162,13 +178,17 @@ const rewrite = (line: string): void => {
 					}, timeout);
 				}
 			},
-		}),
-		renderer = setInterval(renderProgressBar, 50);
-	await endStream(testStream);
-	renderProgressBar();
-	clearInterval(renderer);
-	if (completed < total) {
-		process.stdout.write(gray(` ${completed} of ${total}`) as string);
+		});
+	if (reporter === 'spec') {
+		await endStream(testStream);
+	} else {
+		const renderer = setInterval(renderProgressBar, 50);
+		await endStream(testStream);
+		renderProgressBar();
+		clearInterval(renderer);
+		if (completed < total) {
+			process.stdout.write(gray(` ${completed} of ${total}`) as string);
+		}
 	}
 
 	// 3. Log the results
@@ -190,7 +210,7 @@ const rewrite = (line: string): void => {
 		process.exitCode = 1;
 		console.log(stat('red', failed, 'failing'));
 	}
-	if (completed > total) {
+	if (reporter !== 'spec' && completed > total) {
 		console.error(stat('red', `${completed} / ${total}`, 'completed'));
 	}
 	console.log();
