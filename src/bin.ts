@@ -39,7 +39,7 @@ const pad = (num: number, length = 8): string => `${num.toFixed(2).padStart(leng
 
 const greenBold = (str: string[]): string => str.map(s => `${styleText(['green', 'bold'], s)}|`).join('');
 
-const isTrace = (line: string): boolean => line.trim().startsWith('at ');
+const isTrace = (line: string): boolean => line.trimStart().startsWith('at ');
 
 const rewrite = (line: string): void => {
 	readline.clearLine(process.stdout, 0);
@@ -261,7 +261,7 @@ ${border}
 								return true;
 							}
 							const j = line.indexOf('(');
-							return j === -1 || /^(?:\/|file:\/{2})/u.test(line.charAt(j + 1));
+							return j === -1 || /^(?:\/|file:\/{2})/u.test(line.slice(j + 1));
 						})
 						.map((line, k) => {
 							if (isTrace(line)) {
