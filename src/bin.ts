@@ -126,7 +126,8 @@ const rewrite = (line: string): void => {
 							parentId,
 							nesting,
 						}: EventData.TestComplete & {parentId?: number}) => {
-							if (error?.cause instanceof Error) {
+							const isAbort = error?.name === 'AbortError';
+							if (isAbort || error?.cause instanceof Error) {
 								const paths = [name];
 								while (parentId !== undefined) {
 									const entry = registry.get(`${file}-${parentId}`);
@@ -138,7 +139,7 @@ const rewrite = (line: string): void => {
 								}
 								failures.push({
 									paths,
-									error: error.cause,
+									error: isAbort ? error : error.cause as Error,
 								});
 							}
 							if (type === 'test') {

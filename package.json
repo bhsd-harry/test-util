@@ -1,6 +1,6 @@
 {
 	"name": "@bhsd/test-util",
-	"version": "3.1.1",
+	"version": "3.1.2",
 	"homepage": "https://github.com/bhsd-harry/test-util#readme",
 	"bugs": {
 		"url": "https://github.com/bhsd-harry/test-util/issues"
@@ -38,7 +38,7 @@
 		"esbuild": "^0.28.2",
 		"eslint": "^10.8.1",
 		"typescript": "^6.0.3",
-		"wikiparser-node": "^1.46.2"
+		"wikiparser-node": "^1.46.3"
 	},
 	"engines": {
 		"node": "^20.19.0 || ^22.13.0 || >=24.11.0"
