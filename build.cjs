@@ -1,7 +1,9 @@
 'use strict';
 
-const esbuild = require('esbuild'),
-	{version} = require('./package.json');
+const fs = require('fs'),
+	esbuild = require('esbuild'),
+	{version} = require('./package.json'),
+	tests = require('wikiparser-node/test/parserTests.json');
 
 esbuild.buildSync({
 	entryPoints: ['src/index.ts'],
@@ -14,3 +16,5 @@ esbuild.buildSync({
 	outfile: 'dist/index.js',
 	logLevel: 'info',
 });
+
+fs.writeFileSync('parserTests.json', JSON.stringify(tests.map(({desc, wikitext}) => ({desc, wikitext}))));

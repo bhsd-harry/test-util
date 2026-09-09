@@ -1,6 +1,6 @@
 {
 	"name": "@bhsd/test-util",
-	"version": "3.2.0",
+	"version": "3.2.1",
 	"homepage": "https://github.com/bhsd-harry/test-util#readme",
 	"bugs": {
 		"url": "https://github.com/bhsd-harry/test-util/issues"
@@ -26,7 +26,7 @@
 	"scripts": {
 		"ls": "npm i --package-lock-only && npm ls --package-lock-only --all --omit=dev",
 		"prepublishOnly": "npm run build",
-		"build": "tsc && node build.cjs && cp ../wikiparser-node/test/parserTests.json .",
+		"build": "tsc && node build.cjs",
 		"lint:ts": "tsc --noEmit && eslint --cache .",
 		"lint": "npm run lint:ts"
 	},
@@ -44,11 +44,11 @@
 		"@types/mocha": "^10.0.10"
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^4.1.0",
+		"@bhsd/code-standard": "^4.2.0",
 		"esbuild": "^0.28.2",
 		"eslint": "^10.10.0",
 		"typescript": "^6.0.3",
-		"wikiparser-node": "^1.46.4"
+		"wikiparser-node": "^1.47.0"
 	},
 	"engines": {
 		"node": "^20.19.0 || ^22.13.0 || >=24.11.0"
