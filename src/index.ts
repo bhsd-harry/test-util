@@ -198,13 +198,13 @@ export const findUncoveredBlocks = (input: string, output: string, file: string,
 	for (let i = 0, j = 0, start = uncovered[0]!; i < uncovered.length; i++) {
 		const line = uncovered[i]!,
 			count = i - j;
-		if (line - start > count) {
-			if (count >= threshold) {
-				uncoveredBlocks.push(`${start}-${start + count - 1}`);
-			}
-			j = i;
-			start = line;
+		if (line - start <= count) {
+			continue;
+		} else if (count >= threshold) {
+			uncoveredBlocks.push(`${start}-${start + count - 1}`);
 		}
+		j = i;
+		start = line;
 	}
 	fs.writeFileSync(output, uncoveredBlocks.join('\n'));
 };

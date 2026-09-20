@@ -6,12 +6,8 @@ import type {Func, AsyncFunc} from 'mocha';
 
 export interface Test {
 	desc: string;
-	title?: string | undefined;
 	wikitext?: string;
 	parsed?: string;
-	html?: string;
-	print?: string;
-	render?: string;
 }
 declare type TestResult = Pick<Test, 'desc' | 'wikitext' | 'parsed'>;
 

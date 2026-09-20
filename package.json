@@ -28,7 +28,8 @@
 		"prepublishOnly": "npm run build",
 		"build": "tsc && node build.cjs",
 		"lint:ts": "tsc --noEmit && eslint --cache .",
-		"lint": "npm run lint:ts"
+		"lint": "npm run lint:ts",
+		"test": "echo 'This package has no tests.'"
 	},
 	"peerDependencies": {
 		"culori": "^4.0.0"
@@ -44,11 +45,11 @@
 		"@types/mocha": "^10.0.10"
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^4.2.0",
+		"@bhsd/code-standard": "^4.3.0",
 		"esbuild": "^0.28.2",
-		"eslint": "^10.10.0",
+		"eslint": "^10.12.0",
 		"typescript": "^6.0.3",
-		"wikiparser-node": "^1.47.0"
+		"wikiparser-node": "^1.48.0"
 	},
 	"engines": {
 		"node": "^20.19.0 || ^22.13.0 || >=24.11.0"
