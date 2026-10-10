@@ -9,18 +9,19 @@ import {red, green, yellow, gray} from '@bhsd/nodejs';
 import type {InspectColor} from 'util';
 import type {TestsStream, EventData, RunOptions} from 'node:test';
 
-const getValues = (args: string[], key: string): string[] =>
+const args = process.argv.slice(2);
+
+const getValues = (key: string): string[] =>
 	args.filter(arg => arg.startsWith(key)).map(arg => arg.slice(key.length + 1));
 
-const args = process.argv.slice(2),
-	files = args.filter(arg => !arg.startsWith('-')),
+const files = args.filter(arg => !arg.startsWith('-')),
 	includeArgs = '--test-coverage-include',
 	timeoutArg = '--test-timeout',
 	reporterArg = '--test-reporter',
 	known = new Set([includeArgs, timeoutArg, reporterArg]),
-	coverageIncludeGlobs = getValues(args, includeArgs),
-	timeout = Number(getValues(args, timeoutArg).at(-1)),
-	reporter = getValues(args, reporterArg).at(-1),
+	coverageIncludeGlobs = getValues(includeArgs),
+	timeout = Number(getValues(timeoutArg).at(-1)),
+	reporter = getValues(reporterArg).at(-1),
 	execArgv = args.filter(
 		arg => arg.startsWith('-') && !known.has(arg.split('=', 1)[0]!),
 	),

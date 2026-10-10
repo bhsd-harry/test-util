@@ -1,6 +1,6 @@
 {
 	"name": "@bhsd/test-util",
-	"version": "3.2.1",
+	"version": "3.3.0",
 	"homepage": "https://github.com/bhsd-harry/test-util#readme",
 	"bugs": {
 		"url": "https://github.com/bhsd-harry/test-util/issues"
@@ -24,7 +24,7 @@
 	},
 	"type": "module",
 	"scripts": {
-		"ls": "npm i --package-lock-only && npm ls --package-lock-only --all --omit=dev",
+		"ls": "npm i --package-lock-only && npm ls --package-lock-only -a --omit=dev",
 		"prepublishOnly": "npm run build",
 		"build": "tsc && node build.cjs",
 		"lint:ts": "tsc --noEmit && eslint --cache .",
@@ -45,9 +45,9 @@
 		"@types/mocha": "^10.0.10"
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^4.3.0",
+		"@bhsd/code-standard": "^5.0.0",
 		"esbuild": "^0.28.2",
-		"eslint": "^10.12.0",
+		"eslint": "^10.13.0",
 		"typescript": "^6.0.3",
 		"wikiparser-node": "^1.48.0"
 	},
